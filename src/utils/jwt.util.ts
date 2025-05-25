@@ -22,32 +22,39 @@ export const generateTokens = (user: User): TokenResponse => {
     role: user.role
   };
 
+  // Get secrets with fallbacks
+  const accessSecret = process.env.JWT_ACCESS_SECRET || 'your_access_secret_here';
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || 'your_refresh_secret_here';
+
+  // Use numeric values for expiresIn (seconds)
+  const accessExpirationSeconds = 15 * 60; // 15 minutes
+  const refreshExpirationSeconds = 7 * 24 * 60 * 60; // 7 days
+
+  // Generate tokens with numeric expiration
   const accessToken = jwt.sign(
     payload,
-    process.env.JWT_ACCESS_SECRET || 'access_secret',
-    { expiresIn: process.env.JWT_ACCESS_EXPIRATION || '15m' }
+    accessSecret,
+    { expiresIn: accessExpirationSeconds }
   );
 
   const refreshToken = jwt.sign(
     payload,
-    process.env.JWT_REFRESH_SECRET || 'refresh_secret',
-    { expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d' }
+    refreshSecret,
+    { expiresIn: refreshExpirationSeconds }
   );
 
   return {
     accessToken,
     refreshToken,
-    expiresIn: 15 * 60 // 15 minutes in seconds
+    expiresIn: accessExpirationSeconds
   };
 };
 
 // Verify access token
 export const verifyAccessToken = (token: string): TokenPayload => {
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_ACCESS_SECRET || 'access_secret'
-    );
+    const accessSecret = process.env.JWT_ACCESS_SECRET || 'your_access_secret_here';
+    const decoded = jwt.verify(token, accessSecret);
     return decoded as TokenPayload;
   } catch (error) {
     throw new Error('Invalid token');
@@ -57,10 +64,8 @@ export const verifyAccessToken = (token: string): TokenPayload => {
 // Verify refresh token
 export const verifyRefreshToken = (token: string): TokenPayload => {
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_REFRESH_SECRET || 'refresh_secret'
-    );
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || 'your_refresh_secret_here';
+    const decoded = jwt.verify(token, refreshSecret);
     return decoded as TokenPayload;
   } catch (error) {
     throw new Error('Invalid refresh token');
