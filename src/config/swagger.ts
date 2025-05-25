@@ -20,7 +20,7 @@ export const setupSwagger = (app: express.Application) => {
       servers: [
         {
           url: isProduction 
-            ? `https://${process.env.RAILWAY_STATIC_URL || 'your-app.railway.app'}`
+            ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL || 'ue-backend-production.up.railway.app'}`
             : 'http://localhost:3000',
           description: isProduction ? 'Production server (Railway)' : 'Development server',
         },
