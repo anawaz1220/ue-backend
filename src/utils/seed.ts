@@ -8,13 +8,17 @@ import { ServiceType } from '../entities/ServiceType.entity';
  */
 async function seed() {
   try {
-    // Initialize database connection
-    await AppDataSource.initialize();
-    console.log('Database connection established');
+    // Initialize database connection if not already connected
+    if (!AppDataSource.isInitialized) {
+      await AppDataSource.initialize();
+      console.log('Database connection established for seeding');
+    }
 
     // Create repositories
     const userRepository = AppDataSource.getRepository(User);
     const serviceTypeRepository = AppDataSource.getRepository(ServiceType);
+
+    console.log('🌱 Starting database seeding...');
 
     // Check if admin user exists
     const adminExists = await userRepository.findOne({
@@ -34,24 +38,60 @@ async function seed() {
       adminUser.is_email_verified = true;
       
       await userRepository.save(adminUser);
-      console.log('Admin user created');
+      console.log('✅ Admin user created');
     } else {
-      console.log('Admin user already exists');
+      console.log('ℹ️  Admin user already exists');
     }
 
-    // Add default service types
+    // Add default service types for beauty/wellness services
     const defaultServiceTypes = [
-      'Haircut',
+      // Hair Services
+      'Haircut & Styling',
       'Hair Coloring',
+      'Hair Highlights',
+      'Hair Treatment',
+      'Hair Wash & Blow Dry',
+      
+      // Nail Services
       'Manicure',
       'Pedicure',
-      'Facial',
-      'Massage',
-      'Waxing',
-      'Makeup',
-      'Eyebrows & Lashes'
+      'Nail Art',
+      'Gel Nails',
+      'Acrylic Nails',
+      
+      // Facial & Skin Services
+      'Classic Facial',
+      'Deep Cleansing Facial',
+      'Anti-Aging Facial',
+      'Acne Treatment',
+      'Skin Consultation',
+      
+      // Body Services
+      'Full Body Massage',
+      'Back Massage',
+      'Hot Stone Massage',
+      'Aromatherapy',
+      
+      // Beauty Services
+      'Makeup Application',
+      'Bridal Makeup',
+      'Party Makeup',
+      'Makeup Consultation',
+      
+      // Hair Removal
+      'Eyebrow Threading',
+      'Upper Lip Threading',
+      'Full Face Threading',
+      'Waxing Services',
+      
+      // Eye Services
+      'Eyebrow Shaping',
+      'Eyelash Extensions',
+      'Eyelash Tinting',
+      'Eyebrow Tinting'
     ];
 
+    let newServicesCount = 0;
     for (const typeName of defaultServiceTypes) {
       const serviceTypeExists = await serviceTypeRepository.findOne({
         where: { name: typeName }
@@ -61,19 +101,41 @@ async function seed() {
         const serviceType = new ServiceType();
         serviceType.name = typeName;
         await serviceTypeRepository.save(serviceType);
-        console.log(`Service type created: ${typeName}`);
-      } else {
-        console.log(`Service type already exists: ${typeName}`);
+        newServicesCount++;
+        console.log(`✅ Service type created: ${typeName}`);
       }
     }
 
-    console.log('Database seeding completed successfully');
-    process.exit(0);
+    if (newServicesCount === 0) {
+      console.log('ℹ️  All service types already exist');
+    } else {
+      console.log(`✅ Created ${newServicesCount} new service types`);
+    }
+
+    console.log('🎉 Database seeding completed successfully');
+    
+    // Don't exit process if called from server startup
+    if (require.main === module) {
+      process.exit(0);
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Error seeding database:', error);
-    process.exit(1);
+    console.error('❌ Error seeding database:', error);
+    
+    // Don't exit process if called from server startup
+    if (require.main === module) {
+      process.exit(1);
+    }
+    
+    throw error;
   }
 }
 
-// Run the seed function
-seed();
+// Export as default for ES6 imports
+export default seed;
+
+// Run the seed function if this file is executed directly
+if (require.main === module) {
+  seed();
+}
