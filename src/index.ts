@@ -144,19 +144,28 @@ async function startServer() {
     // Run seed if in production and first deployment
     if (isProduction) {
       try {
+        // Wait a moment for database to be fully ready
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         const { default: seedFunction } = await import('./utils/seed');
         await seedFunction();
         console.log('✅ Database seeded successfully');
       } catch (seedError) {
-        console.log('ℹ️  Seed already exists or failed (this is normal):', (seedError as Error).message);
+        console.log('ℹ️  Seed failed (this is normal for existing data):', (seedError as Error).message);
+        // Don't exit on seed failure in production
       }
     }
     
     // Start express server
     app.listen(Number(PORT), () => {
+      const baseUrl = isProduction 
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'your-app.railway.app'}` 
+        : `http://localhost:${PORT}`;
+        
       console.log(`✅ Server running on port ${PORT}`);
-      console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-      console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
+      console.log(`📚 API Documentation: ${baseUrl}/api-docs`);
+      console.log(`🏥 Health Check: ${baseUrl}/health`);
+      console.log(`🌐 Base URL: ${baseUrl}`);
     });
   } catch (error) {
     console.error('❌ Error starting server:', error);

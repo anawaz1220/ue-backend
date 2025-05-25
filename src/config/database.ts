@@ -36,7 +36,7 @@ export const AppDataSource = new DataSource({
         database: process.env.DB_DATABASE || 'urban_ease',
       }
   ),
-  synchronize: !isProduction, // Only sync in development
+  synchronize: true, // Enable sync in production for first deployment
   logging: !isProduction,
   entities: [
     path.join(__dirname, '../entities/**/*.{ts,js}')
