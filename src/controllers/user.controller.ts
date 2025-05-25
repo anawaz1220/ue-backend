@@ -35,15 +35,23 @@ export class UserController {
         return next(error);
       }
 
-      // Remove sensitive information
-      delete user.password_hash;
-      delete user.verification_token;
-      delete user.reset_password_token;
-      delete user.reset_password_expires;
+      // Create a safe user object without sensitive information
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        is_email_verified: user.is_email_verified,
+        google_id: user.google_id,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        last_login: user.last_login,
+        customer_profile: user.customer_profile,
+        business_profile: user.business_profile
+      };
 
       res.status(200).json({
         success: true,
-        data: user
+        data: safeUser
       });
     } catch (error) {
       next(error);

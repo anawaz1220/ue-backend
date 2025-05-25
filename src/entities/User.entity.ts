@@ -37,20 +37,20 @@ export class User {
 
   @Column({ nullable: true })
   @IsOptional()
-  verification_token: string;
+  verification_token?: string;
 
   @Column({ nullable: true })
   @IsOptional()
-  reset_password_token: string;
+  reset_password_token?: string;
 
   @Column({ type: 'timestamp', nullable: true })
   @IsOptional()
   @IsDate()
-  reset_password_expires: Date;
+  reset_password_expires?: Date;
 
   @Column({ nullable: true })
   @IsOptional()
-  google_id: string;
+  google_id?: string;
 
   @CreateDateColumn()
   created_at: Date;
@@ -61,13 +61,13 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   @IsOptional()
   @IsDate()
-  last_login: Date;
+  last_login?: Date;
 
   @OneToOne(() => CustomerProfile, profile => profile.user)
-  customer_profile: CustomerProfile;
+  customer_profile?: CustomerProfile;
 
   @OneToOne(() => BusinessProfile, profile => profile.user)
-  business_profile: BusinessProfile;
+  business_profile?: BusinessProfile;
 
   @BeforeInsert()
   @BeforeUpdate()

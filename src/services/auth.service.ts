@@ -160,9 +160,9 @@ export class AuthService {
       throw new Error('Invalid verification token');
     }
 
-    // Update user
+    // Update user - Fix for TypeScript strict mode
     user.is_email_verified = true;
-    user.verification_token = null;
+    user.verification_token = undefined;
     await this.userRepository.save(user);
 
     return true;
@@ -212,10 +212,10 @@ export class AuthService {
       throw new Error('Invalid or expired reset token');
     }
 
-    // Update password
+    // Update password - Fix for TypeScript strict mode
     user.password_hash = newPassword;
-    user.reset_password_token = null;
-    user.reset_password_expires = null;
+    user.reset_password_token = undefined;
+    user.reset_password_expires = undefined;
     await this.userRepository.save(user);
 
     return true;
