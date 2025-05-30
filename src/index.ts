@@ -37,7 +37,7 @@ const corsOptions = {
           'http://localhost:5173', // Vite default port
           'http://localhost:60476',             // Your current React port (from error logs)
           'https://ue-backend-production.up.railway.app', // Backend URL
-          'https://ue-frontend.vercel.app/'        // Future Vercel URL (add after deployment)
+          'https://ue-frontend.vercel.app'        // Future Vercel URL (add after deployment)
         ];
     
     // Check if origin is allowed or matches production patterns
