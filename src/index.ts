@@ -20,45 +20,75 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// CORS configuration - simplified for Express 4.x
+// CORS configuration - Enhanced for Railway + Vercel
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
-    // Allow requests with no origin (like mobile apps or Postman)
+    // Allow requests with no origin (like mobile apps, Postman, server-to-server)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = isProduction 
-      ? [
-          process.env.FRONTEND_URL,
-          // Add your production frontend domains here
-        ].filter(Boolean)
-      : [
-          'http://localhost:3000', 
-          'http://localhost:3001',
-          'http://localhost:5173', // Vite default port
-          'http://localhost:60476',             // Your current React port (from error logs)
-          'https://ue-backend-production.up.railway.app', // Backend URL
-          'https://ue-frontend.vercel.app'        // Future Vercel URL (add after deployment)
-        ];
+    const allowedOrigins = [
+      // Production domains
+      'https://ue-frontend.vercel.app',
+      'https://ue-frontend-production.up.railway.app',
+      process.env.FRONTEND_URL,
+      
+      // Development domains  
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'http://localhost:5173',
+      'http://localhost:60476',
+      
+      // Additional Railway/Vercel patterns
+      ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
+    ].filter(Boolean);
     
-    // Check if origin is allowed or matches production patterns
-    const isAllowed = allowedOrigins.includes(origin) ||
-                     (isProduction && (
-                       origin.endsWith('.railway.app') ||
-                       origin.endsWith('.vercel.app') ||
-                       origin.endsWith('.netlify.app')
-                     ));
+    console.log(`🔍 CORS Check - Origin: ${origin}, Environment: ${process.env.NODE_ENV}`);
+    
+    // Check exact matches first
+    const isExactMatch = allowedOrigins.includes(origin);
+    
+    // Check pattern matches for Vercel preview deployments and Railway
+    const isPatternMatch = /^https:\/\/.*\.vercel\.app$/.test(origin) ||
+                          /^https:\/\/.*\.railway\.app$/.test(origin) ||
+                          /^https:\/\/.*\.netlify\.app$/.test(origin);
+    
+    const isAllowed = isExactMatch || isPatternMatch;
     
     if (isAllowed) {
+      console.log(`✅ CORS allowed for origin: ${origin}`);
       callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(null, false); // Don't throw error, just deny
+      console.warn(`❌ CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins);
+      callback(new Error(`Origin ${origin} not allowed by CORS`), false);
     }
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+  credentials: false, // Set to false for JWT-based auth (no cookies)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Cache-Control',
+    'X-File-Name'
+  ],
+  exposedHeaders: ['Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // Cache preflight for 24 hours
 };
+
+app.use(cors(corsOptions));
+
+// Explicitly handle preflight OPTIONS requests
+app.options('*', cors(corsOptions));
+
+// Add this before your routes to debug CORS
+app.use((req, res, next) => {
+  console.log(`🌐 Request from origin: ${req.headers.origin || 'no-origin'}`);
+  next();
+});
 
 // Middleware
 app.use(cors(corsOptions));
